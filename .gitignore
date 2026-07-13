@@ -1,3 +1,6 @@
+# Claude Code local settings
+.claude/
+
 # Local test server log
 server.log
 *.log
