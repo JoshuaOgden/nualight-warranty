@@ -483,7 +483,16 @@ async function loadDB() {
 }
 
 /* ---------------- Camera QR scanner ---------------- */
-let scanStream = null, scanRAF = null;
+let scanStream = null, scanRAF = null, scanOpenedAt = 0, lastScanCandidate = null;
+
+// Only accept scans that look like a real product link or ID — this stops the
+// scanner from acting on garbage that jsQR can occasionally read from camera noise.
+function isAcceptableScan(text) {
+  text = (text || '').trim();
+  if (/^https?:\/\//i.test(text)) return true;                       // a link
+  if (/^[A-Za-z0-9][A-Za-z0-9 \-]{6,40}$/.test(text) && /\d{5}/.test(text)) return true; // a bare Product ID
+  return false;
+}
 
 async function startScanner() {
   const scanner = $('scanner'), status = $('scanStatus');
@@ -492,6 +501,8 @@ async function startScanner() {
     return;
   }
   status.textContent = 'Point your camera at the QR code…';
+  lastScanCandidate = null;
+  scanOpenedAt = Date.now();
   scanner.classList.add('open');
   try {
     scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
@@ -518,7 +529,14 @@ function scanLoop() {
   ctx.drawImage(video, 0, 0, w, h);
   const img = ctx.getImageData(0, 0, w, h);
   const code = jsQR(img.data, w, h, { inversionAttempts: 'dontInvert' });
-  if (code && code.data) handleScan(code.data);
+  if (code && code.data && isAcceptableScan(code.data)) {
+    // Require the same value on two consecutive frames before acting,
+    // so a one-off misread can never trigger anything.
+    if (code.data === lastScanCandidate) handleScan(code.data);
+    else lastScanCandidate = code.data;
+  } else {
+    lastScanCandidate = null;
+  }
 }
 
 function stopScanner() {
@@ -532,11 +550,23 @@ function handleScan(text) {
   text = (text || '').trim();
   $('scanStatus').textContent = 'QR code found!';
   stopScanner();
-  if (/^https?:\/\//i.test(text)) {
-    // A link (e.g. the TinyURL or a direct product link) — go to it
+
+  // If the QR holds a link that includes a product id (?id=...), look it up
+  // in place — no page reload, no redirect. This is the normal case.
+  let id = null;
+  try {
+    const u = new URL(text);
+    id = u.searchParams.get('id');
+  } catch (e) { /* not a URL */ }
+
+  if (id) {
+    $('idInput').value = id;
+    lookup(id);
+  } else if (/^https?:\/\//i.test(text)) {
+    // Some other link (e.g. an old TinyURL) — follow it
     window.location.href = text;
   } else {
-    // A bare Product ID — look it up in place
+    // A bare Product ID
     $('idInput').value = text;
     lookup(text);
   }
@@ -544,7 +574,10 @@ function handleScan(text) {
 
 $('scanBtn').addEventListener('click', startScanner);
 $('scanBtn2').addEventListener('click', startScanner);
-$('scanCancel').addEventListener('click', stopScanner);
+$('scanCancel').addEventListener('click', function () {
+  if (Date.now() - scanOpenedAt < 600) return; // ignore an accidental ghost tap right after opening
+  stopScanner();
+});
 
 $('lookupForm').addEventListener('submit', e => { e.preventDefault(); lookup($('idInput').value); });
 loadDB();
