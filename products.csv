@@ -1,4 +1,4 @@
 product_id,sku,description,webpage_url,product_photo,install_guide_url,ship_date,warranty_years,warranty_status,claim_date,claim_reference
-N14646 25182 V1549 0007,N14646,ION V CHILLER 1676 E 4000K Vivace,https://www.nualight.com,assets/product-N14646.svg,assets/install-guide-N14646.pdf,2025-09-25,5,,,
-N14646 24010 V1549 0011,N14646,ION V CHILLER 1676 E 4000K Vivace,https://www.nualight.com,assets/product-N14646.svg,assets/install-guide-N14646.pdf,2024-01-10,5,Claimed,2026-05-02,WC-2026-0042
-N14646 19100 A1002 0003,N14646,ION V CHILLER 1676 E 4000K Vivace,https://www.nualight.com,assets/product-N14646.svg,assets/install-guide-N14646.pdf,2019-04-10,5,,,
+N11001 25182 354718 A,N11001,Pulse V C FREEZER 1532 4000K Vivace,https://www.nualight.com,assets/Pulse V Center.62.png,assets/QM0156_B ION-V Installation Sheet.pdf,25/09/2025,5,,,
+N11002 24010 647474 B,N11002,Pulse V L FREEZER 1532 4000K Vivace,https://www.nualight.com,assets/Pulse V Range.15.png,assets/QM0156_B ION-V Installation Sheet.pdf,10/01/2024,5,Claimed,02/05/2026,WC-2026-0042
+N11002 19100 774744 C,N11003,Pulse V R FREEZER 1532 4000K Vivace,https://www.nualight.com,assets/Pulse V Range.14.png,assets/QM0156_B ION-V Installation Sheet.pdf,10/04/2019,5,,,
