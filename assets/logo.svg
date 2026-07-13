@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" role="img" aria-label="Nualight">
+  <!-- Geometric mark (approximation of the Nualight monogram) -->
+  <g>
+    <path d="M20 40 L95 40 L20 190 Z" fill="#8CC63F"/>
+    <path d="M110 40 L110 150 A55 55 0 0 0 220 150 L220 40 L174 40 L174 150 A9 9 0 0 1 156 150 L156 40 Z" fill="#8CC63F"/>
+    <path d="M235 190 L235 40 L285 40 L285 190 Z" fill="#8CC63F"/>
+    <path d="M235 190 L285 40 L285 190 Z" fill="#6FA82E"/>
+  </g>
+  <!-- Wordmark -->
+  <text x="330" y="180" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="150" letter-spacing="-3" fill="#3E4C59">NUALIGHT</text>
+  <text x="336" y="245" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="40" fill="#5A6B78">a global leader in refrigerated display lighting</text>
+</svg>

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product ID Portal | Nualight</title>
+<style>
+  :root {
+    --green: #8CC63F;
+    --green-dark: #6FA82E;
+    --green-darker: #5b8f26;
+    --slate: #3E4C59;
+    --slate-2: #5A6B78;
+    --line: #e4e8eb;
+    --active: #7AB800;
+    --red: #c0392b;
+    --amber: #d98a00;
+    --grey: #8a8a8a;
+    --ink: #333b42;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+    color: var(--ink);
+    background: #fff;
+    line-height: 1.5;
+  }
+  a { color: var(--green-dark); }
+
+  /* ---------- Top nav ---------- */
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 32px; border-bottom: 1px solid var(--line);
+    flex-wrap: wrap; gap: 12px;
+  }
+  .nav img { height: 34px; }
+  .nav ul {
+    list-style: none; display: flex; gap: 22px; margin: 0; padding: 0;
+    font-size: 13px; color: var(--slate-2);
+  }
+  .nav li { cursor: default; }
+  .nav li.active { color: var(--green-dark); font-weight: 600; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative; overflow: hidden;
+    background: linear-gradient(105deg, #7cbf3f 0%, #46ab7e 55%, #2f9d8f 100%);
+    color: #fff; padding: 54px 32px; min-height: 150px;
+    display: flex; align-items: flex-end;
+  }
+  .hero h1 { margin: 0; font-size: 34px; font-weight: 700; letter-spacing: .5px; z-index: 1; }
+  .hero .swoosh {
+    position: absolute; right: -40px; top: -60px; width: 420px; height: 320px;
+    background: radial-gradient(closest-side, rgba(255,255,255,.55), rgba(255,255,255,0));
+    transform: rotate(20deg); opacity: .5;
+  }
+
+  /* ---------- Layout ---------- */
+  .wrap { max-width: 900px; margin: 0 auto; padding: 34px 32px 60px; }
+
+  .lookup { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
+  .lookup input {
+    flex: 1; min-width: 220px; padding: 11px 13px; font-size: 15px;
+    border: 1px solid #ccd2d6; border-radius: 4px;
+  }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 11px 20px; font-size: 14px; font-weight: 600;
+    border: none; border-radius: 3px; background: var(--green); color: #fff;
+    cursor: pointer; text-decoration: none; transition: background .15s;
+  }
+  .btn:hover { background: var(--green-dark); }
+
+  .msg { padding: 16px 18px; border-radius: 4px; margin-bottom: 20px; font-size: 15px; display: none; }
+  .msg.error { background: #fdecea; color: var(--red); border: 1px solid #f5c6c0; }
+  .msg.info  { background: #eef5e2; color: var(--green-darker); border: 1px solid #d3e5b4; }
+
+  /* ---------- Result card ---------- */
+  #result { display: none; }
+  .info-grid {
+    display: grid; grid-template-columns: 1fr auto; gap: 30px; align-items: start;
+  }
+  .rows { }
+  .row { display: grid; grid-template-columns: 190px 1fr; padding: 7px 0; font-size: 15px; }
+  .row .k { color: var(--slate-2); }
+  .row .v { color: var(--ink); font-weight: 600; }
+  .row .v.sku { color: var(--green-dark); }
+  .product-photo {
+    width: 220px; max-width: 34vw; align-self: center;
+  }
+  .product-photo img { width: 100%; height: auto; }
+
+  hr { border: none; border-top: 1px solid var(--line); margin: 26px 0; }
+
+  .status { font-weight: 700; }
+  .status.active  { color: var(--active); }
+  .status.expired { color: var(--red); }
+  .status.claimed { color: var(--amber); }
+  .status.void    { color: var(--grey); }
+
+  .actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 6px; }
+  .actions .btn { flex: 1; min-width: 150px; }
+
+  /* ---------- Footer ---------- */
+  footer { background: var(--green); color: #fff; margin-top: 40px; }
+  .foot-cols {
+    max-width: 900px; margin: 0 auto; padding: 34px 32px 10px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; font-size: 13px;
+  }
+  .foot-cols ul { list-style: none; margin: 0; padding: 0; }
+  .foot-cols li { padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,.25); }
+  .foot-bar {
+    border-top: 1px solid rgba(255,255,255,.3);
+  }
+  .foot-inner {
+    max-width: 900px; margin: 0 auto; padding: 18px 32px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  .foot-inner img { height: 30px; filter: brightness(0) invert(1); }
+  .foot-inner .copy { font-size: 12px; opacity: .9; }
+  .foot-legal { background: var(--green-darker); color: #eef5e2; font-size: 11px; }
+  .foot-legal div { max-width: 900px; margin: 0 auto; padding: 10px 32px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+  @media (max-width: 680px) {
+    .info-grid { grid-template-columns: 1fr; }
+    .product-photo { order: -1; width: 180px; max-width: 60vw; }
+    .row { grid-template-columns: 140px 1fr; }
+    .foot-cols { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Top nav -->
+<nav class="nav">
+  <img src="assets/logo.svg" alt="Nualight" onerror="this.onerror=null;this.src='assets/logo.png'">
+  <ul>
+    <li>Products</li><li>Applications</li><li>Case Studies</li>
+    <li class="active">Discover</li><li>Contact Us</li><li>&#128269;</li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="swoosh"></div>
+  <h1>Product ID Portal</h1>
+</header>
+
+<div class="wrap">
+
+  <!-- Lookup (used for manual testing; QR codes land here pre-filled) -->
+  <form class="lookup" id="lookupForm">
+    <input type="text" id="idInput" placeholder="Enter or scan Product ID, e.g. N14646 25182 V1549 0007" autocomplete="off">
+    <button class="btn" type="submit">Check Status</button>
+  </form>
+
+  <div id="msg" class="msg"></div>
+
+  <!-- Result -->
+  <section id="result">
+    <div class="info-grid">
+      <div class="rows">
+        <div class="row"><span class="k">Product ID:</span><span class="v" id="outId"></span></div>
+        <div class="row"><span class="k">Product Description:</span><span class="v" id="outDesc"></span></div>
+        <div class="row"><span class="k">Product SKU:</span><span class="v sku" id="outSku"></span></div>
+        <div class="row"><span class="k"></span><span class="v"><a id="outWebpage" href="#" target="_blank" rel="noopener">Webpage</a></span></div>
+      </div>
+      <div class="product-photo">
+        <img id="outPhoto" src="" alt="Product image">
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="rows">
+      <div class="row"><span class="k">Warranty:</span><span class="v"><span id="outStatus" class="status"></span></span></div>
+      <div class="row"><span class="k">Ship Date:</span><span class="v" id="outShip"></span></div>
+      <div class="row"><span class="k">End Date:</span><span class="v" id="outEnd"></span></div>
+      <div class="row"><span class="k">Days Remaining:</span><span class="v" id="outDays"></span></div>
+      <div class="row" id="claimRow" style="display:none"><span class="k">Claim Reference:</span><span class="v" id="outClaimRef"></span></div>
+    </div>
+
+    <hr>
+
+    <div class="actions">
+      <a class="btn" id="btnInstall" target="_blank" rel="noopener">Install Guide</a>
+      <a class="btn" id="btnTroubleshoot" target="_blank" rel="noopener">Troubleshoot</a>
+      <a class="btn" id="btnContact">Contact Us</a>
+      <a class="btn" id="btnClaim">Claim Warranty</a>
+    </div>
+  </section>
+</div>
+
+<!-- Footer -->
+<footer>
+  <div class="foot-cols">
+    <ul><li>About Us</li><li>Our Board</li><li>We Are Part of Fulham</li><li>Warranty</li></ul>
+    <ul><li>Terms &amp; conditions</li><li>Contact Us</li><li>Refrigeration LED Lighting</li></ul>
+    <ul><li>Case Studies</li><li>#NUALAB</li><li>Media Centre</li><li>Services</li></ul>
+  </div>
+  <div class="foot-bar">
+    <div class="foot-inner">
+      <img src="assets/logo.svg" alt="Nualight" onerror="this.onerror=null;this.src='assets/logo.png'">
+      <span class="copy">Nualight is a registered trademark of Nualight Limited | Copyright &copy; 2005&ndash;2026 Nualight Limited</span>
+    </div>
+  </div>
+  <div class="foot-legal">
+    <div>
+      <span>Phone: +353 21 480 7400 &nbsp;|&nbsp; Email: sales@nualight.com</span>
+      <span>Environmental Policy &nbsp;|&nbsp; Terms of Use &nbsp;|&nbsp; Privacy policy &nbsp;|&nbsp; Site Map</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ---------------- Configuration ---------------- */
+const CONFIG = {
+  dataFile: 'products.csv',
+  warrantyEmail: 'sales@nualight.com',
+  contactUrl: 'https://www.nualight.com/contact-us/',
+  troubleshootUrl: 'https://www.nualight.com/',
+  defaultWarrantyYears: 5,
+  expiringSoonDays: 90
+};
+
+/* ---------------- Helpers ---------------- */
+const $ = id => document.getElementById(id);
+const norm = s => (s || '').toUpperCase().replace(/\s+/g, '');
+
+function ordinal(n) {
+  const s = ['th','st','nd','rd'], v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+function formatDate(d) {
+  const months = ['January','February','March','April','May','June','July',
+                  'August','September','October','November','December'];
+  return ordinal(d.getDate()) + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+// Minimal CSV parser (handles quoted fields and commas within quotes)
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  text = text.replace(/^﻿/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else field += c;
+    } else {
+      if (c === '"') inQuotes = true;
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else field += c;
+    }
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  if (!rows.length) return [];
+  const headers = rows[0].map(h => h.trim());
+  return rows.slice(1)
+    .filter(r => r.some(v => v.trim() !== ''))
+    .map(r => {
+      const obj = {};
+      headers.forEach((h, idx) => obj[h] = (r[idx] || '').trim());
+      return obj;
+    });
+}
+
+// Derive manufacture date from the YYDDD date code embedded in the ID (chars 7-11)
+function deriveDateFromId(idNorm) {
+  const code = idNorm.slice(6, 11);
+  if (!/^\d{5}$/.test(code)) return null;
+  const year = 2000 + parseInt(code.slice(0, 2), 10);
+  const ddd = parseInt(code.slice(2, 5), 10);
+  if (ddd < 1 || ddd > 366) return null;
+  const d = new Date(year, 0, 1);
+  d.setDate(d.getDate() + (ddd - 1));
+  return d.getFullYear() === year ? d : null;
+}
+
+// Accepts YYYY-MM-DD (recommended) or UK/Irish DD/MM/YYYY (what Excel often saves)
+function parseDate(s) {
+  s = (s || '').trim();
+  if (!s) return null;
+  let y, m, d;
+  let mth = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (mth) { y = +mth[1]; m = +mth[2]; d = +mth[3]; }
+  else {
+    mth = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (mth) { d = +mth[1]; m = +mth[2]; y = +mth[3]; }
+    else return null;
+  }
+  const dt = new Date(y, m - 1, d);
+  return (dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d) ? dt : null;
+}
+
+/* ---------------- Core ---------------- */
+let DB = null;
+
+function showMessage(text, type) {
+  const m = $('msg');
+  m.textContent = text;
+  m.className = 'msg ' + type;
+  m.style.display = 'block';
+  $('result').style.display = 'none';
+}
+
+function render(rec) {
+  $('msg').style.display = 'none';
+  $('result').style.display = 'block';
+
+  const idNorm = norm(rec.product_id);
+
+  // Determine start (ship/manufacture) date: explicit column, else derived from date code
+  let start = parseDate(rec.ship_date) || deriveDateFromId(idNorm);
+  const years = parseInt(rec.warranty_years, 10) || CONFIG.defaultWarrantyYears;
+  let end = null;
+  if (start) { end = new Date(start); end.setFullYear(end.getFullYear() + years); }
+
+  const now = new Date();
+  const override = (rec.warranty_status || '').trim().toLowerCase();
+
+  // Status resolution: manual override wins, otherwise computed from dates
+  let statusText, statusClass, daysText;
+  if (override === 'claimed') {
+    statusText = 'Claimed'; statusClass = 'claimed'; daysText = '—';
+  } else if (override === 'void') {
+    statusText = 'Void'; statusClass = 'void'; daysText = '—';
+  } else if (end && now > end) {
+    statusText = 'Expired'; statusClass = 'expired'; daysText = '0';
+  } else if (end) {
+    const days = Math.ceil((end - now) / 86400000);
+    statusText = (days <= CONFIG.expiringSoonDays) ? 'Expiring Soon' : 'Active';
+    statusClass = 'active'; daysText = String(days);
+  } else {
+    statusText = 'Unknown'; statusClass = 'void'; daysText = '—';
+  }
+
+  $('outId').textContent = rec.product_id;
+  $('outDesc').textContent = rec.description || '—';
+  $('outSku').textContent = rec.sku || '—';
+
+  const wp = $('outWebpage');
+  if (rec.webpage_url) { wp.href = rec.webpage_url; wp.style.display = ''; }
+  else { wp.style.display = 'none'; }
+
+  const photo = $('outPhoto');
+  photo.src = rec.product_photo || 'assets/product-N14646.svg';
+  photo.onerror = () => { photo.onerror = null; photo.src = 'assets/product-N14646.svg'; };
+
+  const st = $('outStatus');
+  st.textContent = statusText;
+  st.className = 'status ' + statusClass;
+
+  $('outShip').textContent = start ? formatDate(start) : '—';
+  $('outEnd').textContent = end ? formatDate(end) : '—';
+  $('outDays').textContent = daysText;
+
+  // Claim reference row
+  if (override === 'claimed' && rec.claim_reference) {
+    $('claimRow').style.display = '';
+    const ref = rec.claim_date ? (rec.claim_reference + '  (' + rec.claim_date + ')') : rec.claim_reference;
+    $('outClaimRef').textContent = ref;
+  } else {
+    $('claimRow').style.display = 'none';
+  }
+
+  // Buttons
+  $('btnInstall').href = rec.install_guide_url || '#';
+  $('btnTroubleshoot').href = CONFIG.troubleshootUrl;
+  $('btnContact').href = CONFIG.contactUrl;
+
+  const subject = encodeURIComponent('Warranty Claim - ' + rec.product_id);
+  const body = encodeURIComponent(
+    'I would like to make a warranty claim for the following product.\n\n' +
+    'Product ID: ' + rec.product_id + '\n' +
+    'SKU: ' + (rec.sku || '') + '\n' +
+    'Description: ' + (rec.description || '') + '\n\n' +
+    'Please describe the issue:\n'
+  );
+  $('btnClaim').href = 'mailto:' + CONFIG.warrantyEmail + '?subject=' + subject + '&body=' + body;
+
+  // Reflect the looked-up ID in the URL (so the page is shareable / QR-friendly)
+  const url = new URL(window.location);
+  url.searchParams.set('id', rec.product_id);
+  window.history.replaceState({}, '', url);
+}
+
+function lookup(rawId) {
+  const q = norm(rawId);
+  if (!q) { showMessage('Please enter a Product ID.', 'error'); return; }
+  if (!DB) { showMessage('Product database is still loading, please try again in a moment.', 'info'); return; }
+  const rec = DB.find(r => norm(r.product_id) === q);
+  if (rec) render(rec);
+  else showMessage('Product ID "' + rawId + '" was not found. Please check the ID and try again, or contact us at ' + CONFIG.warrantyEmail + '.', 'error');
+}
+
+async function loadDB() {
+  try {
+    const res = await fetch(CONFIG.dataFile, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    DB = parseCSV(await res.text());
+  } catch (e) {
+    DB = [];
+    showMessage('Could not load the product database (' + e.message + '). If you are opening this file directly, it must be served over http:// — see README.', 'error');
+    return;
+  }
+  // Auto-lookup if an ID was passed in the URL (this is what QR codes link to)
+  const idParam = new URLSearchParams(window.location.search).get('id');
+  if (idParam) { $('idInput').value = idParam; lookup(idParam); }
+}
+
+$('lookupForm').addEventListener('submit', e => { e.preventDefault(); lookup($('idInput').value); });
+loadDB();
+</script>
+
+</body>
+</html>
