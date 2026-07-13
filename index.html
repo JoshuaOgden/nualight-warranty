@@ -107,6 +107,19 @@
   .claim-msg.claimed { background: #fdf3e2; color: #8a5a00; border: 1px solid #f0d9a8; }
   .claim-msg.expired { background: #fdecea; color: #a5271b; border: 1px solid #f5c6c0; }
 
+  /* Scan button + camera overlay */
+  .btn-scan { background: #fff; color: var(--green-dark); border: 2px solid var(--green); }
+  .btn-scan:hover { background: #eef5e2; }
+  .scan-again { text-align: center; margin-top: 26px; }
+
+  .scanner { position: fixed; inset: 0; background: rgba(0,0,0,.9); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .scanner.open { display: flex; }
+  .scanner-inner { width: min(92vw, 460px); text-align: center; }
+  #scanVideo { width: 100%; border-radius: 10px; background: #000; aspect-ratio: 3 / 4; object-fit: cover; }
+  .scan-status { color: #fff; font-size: 15px; margin: 16px 0; min-height: 1.2em; }
+  .scan-cancel { background: #fff; color: var(--slate); }
+  .scan-cancel:hover { background: #e9edf0; }
+
   /* ---------- Footer ---------- */
   footer { background: var(--green); color: #fff; margin-top: 40px; }
   .foot-cols {
@@ -156,8 +169,9 @@
 
   <!-- Lookup (used for manual testing; QR codes land here pre-filled) -->
   <form class="lookup" id="lookupForm">
-    <input type="text" id="idInput" placeholder="Enter or scan Product ID, e.g. N14646 25182 V1549 0007" autocomplete="off">
+    <input type="text" id="idInput" placeholder="Enter or scan Product ID, e.g. N11001 25182 354718 A" autocomplete="off">
     <button class="btn" type="submit">Check Status</button>
+    <button class="btn btn-scan" type="button" id="scanBtn">&#128247; Scan QR Code</button>
   </form>
 
   <div id="msg" class="msg"></div>
@@ -195,8 +209,22 @@
       <a class="btn" id="btnClaim">Claim Warranty</a>
     </div>
     <div id="claimMsg" class="claim-msg"></div>
+
+    <div class="scan-again">
+      <button class="btn btn-scan" type="button" id="scanBtn2">&#128247; Scan another product</button>
+    </div>
   </section>
 </div>
+
+<!-- Camera QR scanner overlay -->
+<div class="scanner" id="scanner">
+  <div class="scanner-inner">
+    <video id="scanVideo" playsinline muted></video>
+    <p class="scan-status" id="scanStatus">Point your camera at the QR code&hellip;</p>
+    <button class="btn scan-cancel" type="button" id="scanCancel">Cancel</button>
+  </div>
+</div>
+<canvas id="scanCanvas" hidden></canvas>
 
 <!-- Footer -->
 <footer>
@@ -219,6 +247,7 @@
   </div>
 </footer>
 
+<script src="assets/jsQR.js"></script>
 <script>
 /* ---------------- Configuration ---------------- */
 const CONFIG = {
@@ -452,6 +481,70 @@ async function loadDB() {
   const idParam = new URLSearchParams(window.location.search).get('id');
   if (idParam) { $('idInput').value = idParam; lookup(idParam); }
 }
+
+/* ---------------- Camera QR scanner ---------------- */
+let scanStream = null, scanRAF = null;
+
+async function startScanner() {
+  const scanner = $('scanner'), status = $('scanStatus');
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof jsQR === 'undefined') {
+    alert('Camera scanning is not supported by this browser. Please type the Product ID instead.');
+    return;
+  }
+  status.textContent = 'Point your camera at the QR code…';
+  scanner.classList.add('open');
+  try {
+    scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
+  } catch (e) {
+    status.textContent = 'Could not access the camera (' + (e.name || 'error') +
+      '). Please allow camera access, or Cancel and type the Product ID.';
+    return;
+  }
+  const video = $('scanVideo');
+  video.srcObject = scanStream;
+  try { await video.play(); } catch (e) { /* iOS resolves on user gesture */ }
+  scanLoop();
+}
+
+function scanLoop() {
+  scanRAF = requestAnimationFrame(scanLoop);
+  const video = $('scanVideo');
+  if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+  const w = video.videoWidth, h = video.videoHeight;
+  if (!w || !h) return;
+  const canvas = $('scanCanvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(video, 0, 0, w, h);
+  const img = ctx.getImageData(0, 0, w, h);
+  const code = jsQR(img.data, w, h, { inversionAttempts: 'dontInvert' });
+  if (code && code.data) handleScan(code.data);
+}
+
+function stopScanner() {
+  if (scanRAF) { cancelAnimationFrame(scanRAF); scanRAF = null; }
+  if (scanStream) { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
+  $('scanVideo').srcObject = null;
+  $('scanner').classList.remove('open');
+}
+
+function handleScan(text) {
+  text = (text || '').trim();
+  $('scanStatus').textContent = 'QR code found!';
+  stopScanner();
+  if (/^https?:\/\//i.test(text)) {
+    // A link (e.g. the TinyURL or a direct product link) — go to it
+    window.location.href = text;
+  } else {
+    // A bare Product ID — look it up in place
+    $('idInput').value = text;
+    lookup(text);
+  }
+}
+
+$('scanBtn').addEventListener('click', startScanner);
+$('scanBtn2').addEventListener('click', startScanner);
+$('scanCancel').addEventListener('click', stopScanner);
 
 $('lookupForm').addEventListener('submit', e => { e.preventDefault(); lookup($('idInput').value); });
 loadDB();
